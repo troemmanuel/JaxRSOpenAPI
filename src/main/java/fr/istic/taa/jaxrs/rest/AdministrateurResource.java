@@ -10,9 +10,8 @@ import jakarta.ws.rs.core.Response;
 import java.util.List;
 
 @Path("admin")
-@Produces("application/json")  // Ajoute ça ici
-public class AdministrateurResource {
-    private final AdministrateurDao administrateurDao = new AdministrateurDao();
+@Produces("application/json")
+public class AdministrateurResource { private final AdministrateurDao administrateurDao = new AdministrateurDao();
 
     @GET
     @Path("/{id}")
