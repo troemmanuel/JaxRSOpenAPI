@@ -1,6 +1,6 @@
 package fr.istic.taa.jaxrs.rest;
 import fr.istic.taa.jaxrs.dao.UtilisateurDao;
-import fr.istic.taa.jaxrs.domain.Administrateur;
+import fr.istic.taa.jaxrs.domain.Utilisateur;
 import fr.istic.taa.jaxrs.domain.Utilisateur;
 import fr.istic.taa.jaxrs.domain.Utilisateur;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -44,23 +44,23 @@ public class UtilisateurResource {
 
     @PUT
     @Path("/{id}")
-    public Response updateUtilisateur(@PathParam("id") Long id, Administrateur administrateur) {
-        Utilisateur  utilisateur= utilisateurDao.findOne(id);
+    public Response updateUtilisateur(@PathParam("id") Long id, Utilisateur utilisateur) {
+        Utilisateur  Utilisateur= utilisateurDao.findOne(id);
         if ( utilisateur == null) {
-            return Response.status(Response.Status.NOT_FOUND).entity("Administrateur non trouvé").build();
+            return Response.status(Response.Status.NOT_FOUND).entity("utilisateur non trouvé").build();
         }
 
         // Mise à jour des champs
-        utilisateur.setNom(administrateur.getNom());
-        utilisateur.setEmail(administrateur.getEmail());
-        utilisateur.setMotDePasse(administrateur.getMotDePasse());
+        utilisateur.setNom(utilisateur.getNom());
+        utilisateur.setEmail(utilisateur.getEmail());
+        utilisateur.setMotDePasse(utilisateur.getMotDePasse());
 
         utilisateurDao.update( utilisateur);
         return Response.ok( utilisateur).build();
     }
 
     @GET
-    public Response findAllAdministrateurs() {
+    public Response findAllutilisateurs() {
         List< Utilisateur>  utilisateur = utilisateurDao.findAll();
         return Response.ok( utilisateur).build();
     }

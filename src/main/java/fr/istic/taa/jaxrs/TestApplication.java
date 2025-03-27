@@ -20,10 +20,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import fr.istic.taa.jaxrs.domain.Organisateur;
-import fr.istic.taa.jaxrs.rest.AdministrateurResource;
-import fr.istic.taa.jaxrs.rest.OrganisateurResource;
-import fr.istic.taa.jaxrs.rest.PetResource;
-import fr.istic.taa.jaxrs.rest.UtilisateurResource;
+import fr.istic.taa.jaxrs.rest.*;
 import io.swagger.v3.jaxrs2.integration.resources.OpenApiResource;
 import jakarta.ws.rs.ApplicationPath;
 import jakarta.ws.rs.core.Application;
@@ -42,6 +39,8 @@ public class TestApplication extends Application {
         clazzes.add(AdministrateurResource.class);
         clazzes.add(OrganisateurResource.class);
         clazzes.add(UtilisateurResource.class);
+        clazzes.add(EvenementResource.class);
+        clazzes.add(TicketResource.class);
 //        clazzes.add(AcceptHeaderOpenApiResource.class);
          
 

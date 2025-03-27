@@ -30,7 +30,16 @@ public class OrganisateurResource {
         organisateurDao.save(organisateur);
         return Response.ok().entity("Organisateur ajouté avec succès").build();
     }
- 
+    @GET
+    @Path("/{id}/evenements")
+    public Response getEvenementsByOrganisateur(@PathParam("id") Long id) {
+        Organisateur organisateur = organisateurDao.findOne(id);
+        if (organisateur == null) {
+            return Response.status(Response.Status.NOT_FOUND).entity("Organisateur non trouvé").build();
+        }
+
+        return Response.ok(organisateur.getEvenements()).build();
+    }
 
     @DELETE
     @Path("/{id}")
