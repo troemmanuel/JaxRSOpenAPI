@@ -62,11 +62,11 @@ public class Ticket implements Serializable {
         this.evenement = evenement;
     }
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "utilisateur_id")
     private Utilisateur utilisateur;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "evenement_id")
     private Evenement evenement;
 }

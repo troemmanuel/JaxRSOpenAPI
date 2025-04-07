@@ -1,5 +1,6 @@
 package fr.istic.taa.jaxrs.domain;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import jakarta.persistence.OneToMany;
@@ -21,5 +22,6 @@ public class Organisateur extends Profil implements Serializable {
     }
 
     @OneToMany(mappedBy = "organisateur")
+    @JsonManagedReference
     private List<Evenement> evenements;
 }

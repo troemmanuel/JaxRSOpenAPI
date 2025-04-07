@@ -1,22 +1,23 @@
-package fr.istic.taa.jaxrs.domain;
+package fr.istic.taa.jaxrs.dto.response;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import jakarta.persistence.*;
+import fr.istic.taa.jaxrs.dto.TicketShortDto;
 
-import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
-@JsonIgnoreProperties(ignoreUnknown = true)
-@Entity
-public class Evenement implements Serializable {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+
+public class EvenementResponseDto {
     private Long id;
     private String nom;
     private Date date;
     private String lieu;
     private int capacite;
+    private String description;
+    private String etat;
+    private int stock;
+    private String genre;
+    private String artiste;
+    private Long organisateurId;
+    private List<TicketShortDto> tickets;
 
     public Long getId() {
         return id;
@@ -70,6 +71,10 @@ public class Evenement implements Serializable {
         return etat;
     }
 
+    public void setEtat(String etat) {
+        this.etat = etat;
+    }
+
     public int getStock() {
         return stock;
     }
@@ -94,36 +99,19 @@ public class Evenement implements Serializable {
         this.artiste = artiste;
     }
 
-    public Organisateur getOrganisateur() {
-        return organisateur;
+    public Long getOrganisateurId() {
+        return organisateurId;
     }
 
-    public void setOrganisateur(Organisateur organisateur) {
-        this.organisateur = organisateur;
+    public void setOrganisateurId(Long organisateurId) {
+        this.organisateurId = organisateurId;
     }
 
-    public List<Ticket> getTickets() {
+    public List<TicketShortDto> getTickets() {
         return tickets;
     }
 
-    public void setTickets(List<Ticket> tickets) {
+    public void setTickets(List<TicketShortDto> tickets) {
         this.tickets = tickets;
-    }
-
-    private String description;
-    private String etat;
-    private int stock;
-    private String genre;
-    private String artiste;
-
-    @ManyToOne
-    @JoinColumn(name = "organisateur_id")
-    @JsonBackReference
-    private Organisateur organisateur;
-
-    @OneToMany(mappedBy = "evenement")
-    private List<Ticket> tickets;
-    public void setEtat(String etat) {
-        this.etat = etat;
     }
 }
