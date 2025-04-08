@@ -1,5 +1,10 @@
 package fr.istic.taa.jaxrs.rest;
 
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.EncodeHintType;
+import com.google.zxing.MultiFormatWriter;
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
 import fr.istic.taa.jaxrs.dao.EvenementDao;
 import fr.istic.taa.jaxrs.dao.TicketDao;
 import fr.istic.taa.jaxrs.dao.UtilisateurDao;
@@ -13,7 +18,13 @@ import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.util.Hashtable;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Path("ticket")
@@ -74,20 +85,60 @@ public class TicketResource {
                         .entity("Événement non trouvé pour l'ID : " + dto.getEvenementId()).build();
             }
 
-            // utilisateur est null à la création
+            // 1. Créer le ticket (sans QR code)
             Ticket ticket = TicketMapper.toEntity(dto, null, evenement);
-
             System.out.println("Ticket créé : " + ticket);
 
+            // 2. Sauvegarder le ticket pour obtenir l'ID
+            ticketDao.save(ticket); // Cela génère l'ID
+
+            // Générer le code QR pour le ticket
+            String qrCodeData = "tremaXyama" + UUID.randomUUID();
+            String fileName = "qr_code_" + ticket.getId() + ".png";
+
+            String relativePath = "src/main/java/fr/istic/taa/jaxrs/upload/qrcodes/" + fileName;
+            String absolutePath = new File(relativePath).getAbsolutePath();
+
+            File directory = new File("src/main/java/fr/istic/taa/jaxrs/upload/qrcodes/");
+            if (!directory.exists()) {
+                directory.mkdirs();
+            }
+
+            generateQRCode(qrCodeData, absolutePath);
+            ticket.setCodeQR(relativePath);
+
+            // Sauvegarder le ticket dans la base de données
             ticketDao.save(ticket);
 
-            return Response.ok("Ticket ajouté avec succès").build();
+            return Response.ok("Ticket ajouté avec succès avec QR Code").build();
 
         } catch (Exception e) {
             e.printStackTrace();
             return Response.serverError()
                     .entity("Erreur serveur : " + e.getMessage()).build();
         }
+    }
+
+    private void generateQRCode(String data, String filePath) throws Exception {
+        // Configurer les paramètres pour le code QR
+        Hashtable<EncodeHintType, Object> hintMap = new Hashtable<>();
+        hintMap.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.L);
+        hintMap.put(EncodeHintType.MARGIN, 1); // Marges du code QR
+
+        // Créer le code QR
+        BitMatrix matrix = new MultiFormatWriter().encode(data, BarcodeFormat.QR_CODE, 300, 300, hintMap);
+
+        // Convertir le matrix en image
+        BufferedImage image = new BufferedImage(300, 300, BufferedImage.TYPE_INT_RGB);
+        for (int i = 0; i < 300; i++) {
+            for (int j = 0; j < 300; j++) {
+                image.setRGB(i, j, matrix.get(i, j) ? 0x000000 : 0xFFFFFF); // Noir et blanc
+            }
+        }
+
+        // Sauvegarder l'image du code QR sur le serveur
+        File file = new File(filePath);
+        ImageIO.write(image, "PNG", file);
     }
 
 }
