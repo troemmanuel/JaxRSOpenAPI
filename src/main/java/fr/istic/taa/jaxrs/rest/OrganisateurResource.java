@@ -3,10 +3,14 @@ package fr.istic.taa.jaxrs.rest;
 import fr.istic.taa.jaxrs.dao.OrganisateurDao;
 import fr.istic.taa.jaxrs.domain.Organisateur;
 import fr.istic.taa.jaxrs.domain.Organisateur;
+import fr.istic.taa.jaxrs.dto.mapper.ProfilMapper;
+import fr.istic.taa.jaxrs.dto.request.ProfilRequestDto;
+import fr.istic.taa.jaxrs.dto.response.ProfilResponseDto;
 import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Response;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Path("organisateur")
 @Produces("application/json")
@@ -16,20 +20,46 @@ public class OrganisateurResource {
 
     @GET
     @Path("/{id}")
-    public Organisateur getOrganisateurById(@PathParam("id") Long id) {
-        return organisateurDao.findOne(id);
+    public Response getById(@PathParam("id") Long id) {
+        Organisateur o = organisateurDao.findOne(id);
+        if (o == null) return Response.status(Response.Status.NOT_FOUND).build();
+        return Response.ok(ProfilMapper.toDto(o)).build();
     }
 
     @GET
-    public List<Organisateur> getAllOrganisateurs() {
-        return organisateurDao.findAll();
+    public Response findAll() {
+        List<ProfilResponseDto> list = organisateurDao.findAll().stream()
+                .map(ProfilMapper::toDto)
+                .collect(Collectors.toList());
+        return Response.ok(list).build();
     }
 
     @POST
-    public Response addOrganisateur(@Parameter(description = "Organisateur object", required = true) Organisateur organisateur) {
-        organisateurDao.save(organisateur);
-        return Response.ok().entity("Organisateur ajouté avec succès").build();
+    public Response create(@Parameter(required = true) ProfilRequestDto dto) {
+        Organisateur o = ProfilMapper.toOrganisateurEntity(dto);
+        organisateurDao.save(o);
+        return Response.status(Response.Status.CREATED).entity("Organisateur ajouté").build();
     }
+
+    @PUT
+    @Path("/{id}")
+    public Response update(@PathParam("id") Long id, ProfilRequestDto dto) {
+        Organisateur existing = organisateurDao.findOne(id);
+        if (existing == null) return Response.status(Response.Status.NOT_FOUND).build();
+        ProfilMapper.updateEntity(existing, dto);
+        organisateurDao.update(existing);
+        return Response.ok(ProfilMapper.toDto(existing)).build();
+    }
+
+    @DELETE
+    @Path("/{id}")
+    public Response delete(@PathParam("id") Long id) {
+        Organisateur o = organisateurDao.findOne(id);
+        if (o == null) return Response.status(Response.Status.NOT_FOUND).build();
+        organisateurDao.delete(o);
+        return Response.ok("Supprimé").build();
+    }
+
     @GET
     @Path("/{id}/evenements")
     public Response getEvenementsByOrganisateur(@PathParam("id") Long id) {
@@ -37,41 +67,6 @@ public class OrganisateurResource {
         if (organisateur == null) {
             return Response.status(Response.Status.NOT_FOUND).entity("Organisateur non trouvé").build();
         }
-
         return Response.ok(organisateur.getEvenements()).build();
-    }
-
-    @DELETE
-    @Path("/{id}")
-    public Response deleteOrganisateur(@PathParam("id") Long id) {
-        Organisateur organisateur= organisateurDao.findOne(id);
-        if (organisateur == null) {
-            return Response.status(Response.Status.NOT_FOUND).entity("organisateur non trouvé").build();
-        }
-        organisateurDao.delete(organisateur);
-        return Response.ok().entity("organisateur supprimé avec succès").build();
-    }
-
-    @PUT
-    @Path("/{id}")
-    public Response updateOrganisateur(@PathParam("id") Long id, Organisateur organisateur) {
-        Organisateur existingAdmin = organisateurDao.findOne(id);
-        if (existingAdmin == null) {
-            return Response.status(Response.Status.NOT_FOUND).entity("Organisateur non trouvé").build();
-        }
-
-        // Mise à jour des champs
-        existingAdmin.setNom(organisateur.getNom());
-        existingAdmin.setEmail(organisateur.getEmail());
-        existingAdmin.setMotDePasse(organisateur.getMotDePasse());
-
-        organisateurDao.update(existingAdmin);
-        return Response.ok(existingAdmin).build();
-    }
-
-    @GET
-    public Response findAllOrganisateurs() {
-        List<Organisateur> admins =organisateurDao.findAll();
-        return Response.ok(admins).build();
     }
 }

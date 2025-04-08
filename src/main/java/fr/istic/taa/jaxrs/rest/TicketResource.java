@@ -11,6 +11,7 @@ import fr.istic.taa.jaxrs.dto.request.TicketRequestDto;
 import fr.istic.taa.jaxrs.dto.response.TicketResponseDto;
 import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -46,19 +47,47 @@ public class TicketResource {
     }
 
     @POST
-    public Response addTicket(TicketRequestDto ticketDto) {
-        Utilisateur utilisateur = utilisateurDao.findOne(ticketDto.getUtilisateurId());
-        Evenement evenement = evenementDao.findOne(ticketDto.getEvenementId());
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response addTicket(TicketRequestDto dto) {
+        try {
+            System.out.println("Reçu DTO : " + dto);
 
-        if (utilisateur == null || evenement == null) {
-            return Response.status(Response.Status.BAD_REQUEST)
-                    .entity("Utilisateur ou Événement introuvable").build();
+            if (dto == null) {
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity("Le corps de la requête est vide").build();
+            }
+
+            // Vérifie l'ID de l'événement
+            if (dto.getEvenementId() == null) {
+                System.out.println("Erreur : evenementId est null");
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity("L'ID de l'événement est requis").build();
+            }
+
+            System.out.println("Chargement de l'événement avec ID : " + dto.getEvenementId());
+            Evenement evenement = evenementDao.findOne(dto.getEvenementId());
+
+            if (evenement == null) {
+                System.out.println("Erreur : Aucun événement trouvé avec l'ID " + dto.getEvenementId());
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity("Événement non trouvé pour l'ID : " + dto.getEvenementId()).build();
+            }
+
+            // utilisateur est null à la création
+            Ticket ticket = TicketMapper.toEntity(dto, null, evenement);
+
+            System.out.println("Ticket créé : " + ticket);
+
+            ticketDao.save(ticket);
+
+            return Response.ok("Ticket ajouté avec succès").build();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Response.serverError()
+                    .entity("Erreur serveur : " + e.getMessage()).build();
         }
-
-        Ticket ticket = TicketMapper.toEntity(ticketDto, utilisateur, evenement);
-        ticketDao.save(ticket);
-
-        TicketResponseDto responseDto = TicketMapper.toDto(ticket);
-        return Response.status(Response.Status.CREATED).entity(responseDto).build();
     }
+
 }

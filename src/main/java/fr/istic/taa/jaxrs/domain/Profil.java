@@ -8,7 +8,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 @Entity
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "profil_type", discriminatorType = DiscriminatorType.STRING)
-abstract class Profil {
+public abstract class Profil {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;

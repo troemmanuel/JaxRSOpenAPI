@@ -3,10 +3,14 @@ import fr.istic.taa.jaxrs.dao.UtilisateurDao;
 import fr.istic.taa.jaxrs.domain.Utilisateur;
 import fr.istic.taa.jaxrs.domain.Utilisateur;
 import fr.istic.taa.jaxrs.domain.Utilisateur;
+import fr.istic.taa.jaxrs.dto.mapper.ProfilMapper;
+import fr.istic.taa.jaxrs.dto.request.ProfilRequestDto;
+import fr.istic.taa.jaxrs.dto.response.ProfilResponseDto;
 import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Response;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Path("utilisateur")
 @Produces("application/json")
@@ -16,52 +20,43 @@ public class UtilisateurResource {
 
     @GET
     @Path("/{id}")
-    public Utilisateur getUtilisateurById(@PathParam("id") Long id) {
-        return utilisateurDao.findOne(id);
+    public Response getById(@PathParam("id") Long id) {
+        Utilisateur u = utilisateurDao.findOne(id);
+        if (u == null) return Response.status(Response.Status.NOT_FOUND).build();
+        return Response.ok(ProfilMapper.toDto(u)).build();
     }
 
     @GET
-    public List<Utilisateur> getAllUtilisateurs() {
-        return utilisateurDao.findAll();
+    public Response findAll() {
+        List<ProfilResponseDto> users = utilisateurDao.findAll().stream()
+                .map(ProfilMapper::toDto)
+                .collect(Collectors.toList());
+        return Response.ok(users).build();
     }
 
     @POST
-    public Response addUtilisateur(@Parameter(description = "Utilisateur object", required = true) Utilisateur utilisateur) {
-        utilisateurDao.save(utilisateur);
-        return Response.ok().entity("Utilisateur ajouté avec succès").build();
-    }
-
-    @DELETE
-    @Path("/{id}")
-    public Response deleteUtilisateur(@PathParam("id") Long id) {
-        Utilisateur  utilisateur= utilisateurDao.findOne(id);
-        if (utilisateur == null) {
-            return Response.status(Response.Status.NOT_FOUND).entity("utilisateur non trouvé").build();
-        }
-        utilisateurDao.delete( utilisateur);
-        return Response.ok().entity("utilisateur supprimé avec succès").build();
+    public Response create(@Parameter(required = true) ProfilRequestDto dto) {
+        Utilisateur user = ProfilMapper.toUtilisateurEntity(dto);
+        utilisateurDao.save(user);
+        return Response.status(Response.Status.CREATED).entity("Utilisateur ajouté").build();
     }
 
     @PUT
     @Path("/{id}")
-    public Response updateUtilisateur(@PathParam("id") Long id, Utilisateur utilisateur) {
-        Utilisateur  Utilisateur= utilisateurDao.findOne(id);
-        if ( utilisateur == null) {
-            return Response.status(Response.Status.NOT_FOUND).entity("utilisateur non trouvé").build();
-        }
-
-        // Mise à jour des champs
-        utilisateur.setNom(utilisateur.getNom());
-        utilisateur.setEmail(utilisateur.getEmail());
-        utilisateur.setMotDePasse(utilisateur.getMotDePasse());
-
-        utilisateurDao.update( utilisateur);
-        return Response.ok( utilisateur).build();
+    public Response update(@PathParam("id") Long id, ProfilRequestDto dto) {
+        Utilisateur existing = utilisateurDao.findOne(id);
+        if (existing == null) return Response.status(Response.Status.NOT_FOUND).build();
+        ProfilMapper.updateEntity(existing, dto);
+        utilisateurDao.update(existing);
+        return Response.ok(ProfilMapper.toDto(existing)).build();
     }
 
-    @GET
-    public Response findAllutilisateurs() {
-        List< Utilisateur>  utilisateur = utilisateurDao.findAll();
-        return Response.ok( utilisateur).build();
+    @DELETE
+    @Path("/{id}")
+    public Response delete(@PathParam("id") Long id) {
+        Utilisateur u = utilisateurDao.findOne(id);
+        if (u == null) return Response.status(Response.Status.NOT_FOUND).build();
+        utilisateurDao.delete(u);
+        return Response.ok("Supprimé").build();
     }
 }
