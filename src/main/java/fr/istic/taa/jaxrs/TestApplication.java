@@ -33,7 +33,7 @@ public class TestApplication extends Application {
     public Set<Class<?>> getClasses() {
 
         final Set<Class<?>> clazzes = new HashSet<Class<?>>();
-
+        clazzes.add(CORSFilter.class);
         clazzes.add(OpenApiResource.class);
         clazzes.add(PetResource.class);
         clazzes.add(AdministrateurResource.class);
