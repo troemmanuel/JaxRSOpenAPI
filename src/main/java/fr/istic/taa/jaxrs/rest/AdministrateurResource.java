@@ -9,7 +9,9 @@ import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Response;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Path("admin")
@@ -35,9 +37,23 @@ public class AdministrateurResource {
 
     @POST
     public Response create(@Parameter(required = true) ProfilRequestDto dto) {
+        String email = dto.getEmail();
+
+        // Préparation du filtre avec l'email
+        Map<String, Object> filters = new HashMap<>();
+        filters.put("email", email);
+
+        // Vérification : email déjà utilisé par un admin
+        if (administrateurDao.findBy(filters).isEmpty()) {
+            return Response.status(Response.Status.CONFLICT)
+                    .entity("Email déjà utilisé par un administrateur.").build();
+        }
+
         Administrateur admin = ProfilMapper.toAdministrateurEntity(dto);
         administrateurDao.save(admin);
-        return Response.status(Response.Status.CREATED).entity("SUCCESS").build();
+
+        return Response.status(Response.Status.CREATED)
+                .entity("SUCCESS").build();
     }
 
     @PUT

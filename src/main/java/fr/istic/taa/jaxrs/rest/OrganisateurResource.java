@@ -9,7 +9,10 @@ import fr.istic.taa.jaxrs.dto.response.ProfilResponseDto;
 import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Response;
+
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Path("organisateur")
@@ -37,6 +40,17 @@ public class OrganisateurResource {
     @POST
     public Response create(@Parameter(required = true) ProfilRequestDto dto) {
         Organisateur o = ProfilMapper.toOrganisateurEntity(dto);
+        String email = dto.getEmail();
+
+        // Préparation du filtre avec l'email
+        Map<String, Object> filters = new HashMap<>();
+        filters.put("email", email);
+
+        if (organisateurDao.findBy(filters).isEmpty()) {
+            return Response.status(Response.Status.CONFLICT)
+                    .entity("Email déjà utilisé par un organisateur.").build();
+        }
+
         organisateurDao.save(o);
         return Response.status(Response.Status.CREATED).entity("Organisateur ajouté").build();
     }

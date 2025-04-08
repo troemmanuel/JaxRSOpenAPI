@@ -41,6 +41,7 @@ public class TestApplication extends Application {
         clazzes.add(UtilisateurResource.class);
         clazzes.add(EvenementResource.class);
         clazzes.add(TicketResource.class);
+        clazzes.add(ConnexionResource.class);
 //        clazzes.add(AcceptHeaderOpenApiResource.class);
          
 

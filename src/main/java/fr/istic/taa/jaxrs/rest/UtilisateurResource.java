@@ -9,7 +9,10 @@ import fr.istic.taa.jaxrs.dto.response.ProfilResponseDto;
 import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Response;
+
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Path("utilisateur")
@@ -37,6 +40,16 @@ public class UtilisateurResource {
     @POST
     public Response create(@Parameter(required = true) ProfilRequestDto dto) {
         Utilisateur user = ProfilMapper.toUtilisateurEntity(dto);
+        String email = dto.getEmail();
+
+        // Préparation du filtre avec l'email
+        Map<String, Object> filters = new HashMap<>();
+        filters.put("email", email);
+
+        if (utilisateurDao.findBy(filters).isEmpty()) {
+            return Response.status(Response.Status.CONFLICT)
+                    .entity("Email déjà utilisé par un utilisateur.").build();
+        }
         utilisateurDao.save(user);
         return Response.status(Response.Status.CREATED).entity("Utilisateur ajouté").build();
     }
