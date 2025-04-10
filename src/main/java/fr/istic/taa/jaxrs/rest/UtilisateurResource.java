@@ -45,8 +45,7 @@ public class UtilisateurResource {
         // Préparation du filtre avec l'email
         Map<String, Object> filters = new HashMap<>();
         filters.put("email", email);
-
-        if (utilisateurDao.findBy(filters).isEmpty()) {
+        if (!utilisateurDao.findBy(filters).isEmpty()) {
             return Response.status(Response.Status.CONFLICT)
                     .entity("Email déjà utilisé par un utilisateur.").build();
         }

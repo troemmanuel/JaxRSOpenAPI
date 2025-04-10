@@ -46,7 +46,7 @@ public class OrganisateurResource {
         Map<String, Object> filters = new HashMap<>();
         filters.put("email", email);
 
-        if (organisateurDao.findBy(filters).isEmpty()) {
+        if (!organisateurDao.findBy(filters).isEmpty()) {
             return Response.status(Response.Status.CONFLICT)
                     .entity("Email déjà utilisé par un organisateur.").build();
         }

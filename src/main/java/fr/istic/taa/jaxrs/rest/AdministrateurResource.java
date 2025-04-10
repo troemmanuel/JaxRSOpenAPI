@@ -44,7 +44,7 @@ public class AdministrateurResource {
         filters.put("email", email);
 
         // Vérification : email déjà utilisé par un admin
-        if (administrateurDao.findBy(filters).isEmpty()) {
+        if (!administrateurDao.findBy(filters).isEmpty()) {
             return Response.status(Response.Status.CONFLICT)
                     .entity("Email déjà utilisé par un administrateur.").build();
         }
