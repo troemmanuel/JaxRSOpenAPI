@@ -45,13 +45,23 @@ public class UtilisateurResource {
         // Préparation du filtre avec l'email
         Map<String, Object> filters = new HashMap<>();
         filters.put("email", email);
+
+        // Vérification si l'email est déjà utilisé par un utilisateur
         if (!utilisateurDao.findBy(filters).isEmpty()) {
             return Response.status(Response.Status.CONFLICT)
                     .entity("Email déjà utilisé par un utilisateur.").build();
         }
+
+        // Sauvegarde de l'utilisateur
         utilisateurDao.save(user);
-        return Response.status(Response.Status.CREATED).entity("Utilisateur ajouté").build();
+
+        // Mapping vers le DTO de réponse
+        ProfilResponseDto responseDto = ProfilMapper.toDto(user);
+
+        return Response.status(Response.Status.CREATED)
+                .entity(responseDto).build();
     }
+
 
     @PUT
     @Path("/{id}")

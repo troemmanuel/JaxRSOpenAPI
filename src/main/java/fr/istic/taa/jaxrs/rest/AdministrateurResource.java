@@ -52,8 +52,11 @@ public class AdministrateurResource {
         Administrateur admin = ProfilMapper.toAdministrateurEntity(dto);
         administrateurDao.save(admin);
 
+        // Mapping vers le DTO de réponse
+        ProfilResponseDto responseDto = ProfilMapper.toDto(admin);
+
         return Response.status(Response.Status.CREATED)
-                .entity("SUCCESS").build();
+                .entity(responseDto).build();
     }
 
     @PUT

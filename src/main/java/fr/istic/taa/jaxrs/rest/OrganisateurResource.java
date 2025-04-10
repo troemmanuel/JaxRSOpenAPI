@@ -46,13 +46,21 @@ public class OrganisateurResource {
         Map<String, Object> filters = new HashMap<>();
         filters.put("email", email);
 
+        // Vérification si l'email est déjà utilisé par un organisateur
         if (!organisateurDao.findBy(filters).isEmpty()) {
             return Response.status(Response.Status.CONFLICT)
                     .entity("Email déjà utilisé par un organisateur.").build();
         }
 
+        // Sauvegarde de l'organisateur
         organisateurDao.save(o);
-        return Response.status(Response.Status.CREATED).entity("Organisateur ajouté").build();
+
+        // Mapping vers le DTO de réponse
+        ProfilResponseDto responseDto = ProfilMapper.toDto(o);
+
+        // Renvoi de la réponse avec le DTO
+        return Response.status(Response.Status.CREATED)
+                .entity(responseDto).build();
     }
 
     @PUT
