@@ -60,7 +60,7 @@ public class TicketResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response addTicket(TicketRequestDto dto) {
+    public Response acheterTicket(TicketRequestDto dto) {
         try {
             System.out.println("Reçu DTO : " + dto);
 
@@ -85,6 +85,13 @@ public class TicketResource {
                         .entity("Événement non trouvé pour l'ID : " + dto.getEvenementId()).build();
             }
 
+            // Vérifie le stock disponible
+            if (evenement.getStock() <= 0) {
+                System.out.println("Erreur : Stock insuffisant pour l'événement");
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity("Plus de places disponibles pour cet événement").build();
+            }
+
             // 1. Créer le ticket (sans QR code)
             Ticket ticket = TicketMapper.toEntity(dto, null, evenement);
             System.out.println("Ticket créé : " + ticket);
@@ -107,10 +114,14 @@ public class TicketResource {
             generateQRCode(qrCodeData, absolutePath);
             ticket.setCodeQR(relativePath);
 
-            // Sauvegarder le ticket dans la base de données
+            // Diminuer le stock de l'événement
+            evenement.setStock(evenement.getStock() - 1);
+            evenementDao.save(evenement); // Sauvegarder le nouvel état de l'événement
+
+            // Sauvegarder le ticket dans la base de données avec le QR Code
             ticketDao.save(ticket);
 
-            return Response.ok("Ticket ajouté avec succès avec QR Code").build();
+            return Response.ok("Ticket acheté avec succès avec QR Code").build();
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -118,6 +129,7 @@ public class TicketResource {
                     .entity("Erreur serveur : " + e.getMessage()).build();
         }
     }
+
 
     private void generateQRCode(String data, String filePath) throws Exception {
         // Configurer les paramètres pour le code QR
