@@ -17,6 +17,7 @@ public class EvenementResponseDto {
     private String genre;
     private String artiste;
     private Long organisateurId;
+    private double prix; // <-- Ajout du champ prix
     private List<TicketShortDto> tickets;
 
     public Long getId() {
@@ -105,6 +106,14 @@ public class EvenementResponseDto {
 
     public void setOrganisateurId(Long organisateurId) {
         this.organisateurId = organisateurId;
+    }
+
+    public double getPrix() { // Getter pour prix
+        return prix;
+    }
+
+    public void setPrix(double prix) { // Setter pour prix
+        this.prix = prix;
     }
 
     public List<TicketShortDto> getTickets() {

@@ -1,5 +1,4 @@
 package fr.istic.taa.jaxrs.domain;
-
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
@@ -7,6 +6,7 @@ import jakarta.persistence.*;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
+
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity
 public class Evenement implements Serializable {
@@ -17,7 +17,22 @@ public class Evenement implements Serializable {
     private Date date;
     private String lieu;
     private int capacite;
+    private String description;
+    private String etat;
+    private int stock;
+    private String genre;
+    private String artiste;
+    private double prix; // Ajout du prix du ticket
 
+    @ManyToOne
+    @JoinColumn(name = "organisateur_id")
+    @JsonBackReference
+    private Organisateur organisateur;
+
+    @OneToMany(mappedBy = "evenement")
+    private List<Ticket> tickets;
+
+    // Getters et setters
     public Long getId() {
         return id;
     }
@@ -70,6 +85,10 @@ public class Evenement implements Serializable {
         return etat;
     }
 
+    public void setEtat(String etat) {
+        this.etat = etat;
+    }
+
     public int getStock() {
         return stock;
     }
@@ -110,20 +129,11 @@ public class Evenement implements Serializable {
         this.tickets = tickets;
     }
 
-    private String description;
-    private String etat;
-    private int stock;
-    private String genre;
-    private String artiste;
+    public double getPrix() {
+        return prix;
+    }
 
-    @ManyToOne
-    @JoinColumn(name = "organisateur_id")
-    @JsonBackReference
-    private Organisateur organisateur;
-
-    @OneToMany(mappedBy = "evenement")
-    private List<Ticket> tickets;
-    public void setEtat(String etat) {
-        this.etat = etat;
+    public void setPrix(double prix) {
+        this.prix = prix;
     }
 }

@@ -22,9 +22,7 @@ import jakarta.ws.rs.core.Response;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Path("ticket")
@@ -129,6 +127,84 @@ public class TicketResource {
                     .entity("Erreur serveur : " + e.getMessage()).build();
         }
     }
+
+    @DELETE
+    @Path("/{id}")
+    public Response annulerTicket(@PathParam("id") Long ticketId) {
+        try {
+            if (ticketId == null) {
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity("L'ID du ticket est requis").build();
+            }
+
+            Ticket ticket = ticketDao.findOne(ticketId);
+            if (ticket == null) {
+                return Response.status(Response.Status.NOT_FOUND)
+                        .entity("Aucun ticket trouvé avec l'ID : " + ticketId).build();
+            }
+
+            Evenement evenement = ticket.getEvenement();
+            if (evenement == null) {
+                return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                        .entity("Événement associé introuvable").build();
+            }
+
+            // Vérifie si l'annulation est possible (24h avant l'événement)
+            Date now = new Date();
+            long timeDiff = evenement.getDate().getTime() - now.getTime();
+            long hoursDiff = timeDiff / (1000 * 60 * 60);
+
+            if (hoursDiff < 24) {
+                return Response.status(Response.Status.FORBIDDEN)
+                        .entity("Annulation impossible : moins de 24h avant l'événement").build();
+            }
+
+            // Supprime le ticket
+            ticketDao.delete(ticket);
+
+            // Ré-augmente le stock
+            evenement.setStock(evenement.getStock() + 1);
+            evenementDao.save(evenement);
+
+            return Response.ok("Ticket annulé avec succès").build();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Response.serverError()
+                    .entity("Erreur lors de l'annulation : " + e.getMessage()).build();
+        }
+    }
+
+    @GET
+    @Path("/utilisateurs/{id}/tickets")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getTicketsParUtilisateur(@PathParam("id") Long utilisateurId) {
+        try {
+            if (utilisateurId == null) {
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity("L'ID de l'utilisateur est requis").build();
+            }
+
+            Map<String, Object> filters = new HashMap<>();
+            filters.put("utilisateur.id", utilisateurId); // clé conforme au nom du champ dans l'entité Ticket
+
+            List<Ticket> tickets = ticketDao.findBy(filters);
+
+            if (tickets == null || tickets.isEmpty()) {
+                return Response.status(Response.Status.NOT_FOUND)
+                        .entity("Aucun ticket trouvé pour cet utilisateur").build();
+            }
+
+            return Response.ok(tickets).build();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Response.serverError()
+                    .entity("Erreur serveur : " + e.getMessage()).build();
+        }
+    }
+
+
 
 
     private void generateQRCode(String data, String filePath) throws Exception {

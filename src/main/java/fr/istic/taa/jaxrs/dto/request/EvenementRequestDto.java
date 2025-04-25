@@ -5,7 +5,6 @@ import fr.istic.taa.jaxrs.dto.TicketShortDto;
 
 import java.util.Date;
 import java.util.List;
-
 public class EvenementRequestDto {
     private Long id;
     private String nom;
@@ -18,17 +17,10 @@ public class EvenementRequestDto {
     private String genre;
     private String artiste;
     private Long organisateurId;
+    private double prix; // <-- Ajout du champ prix
     private List<TicketShortDto> tickets;
 
     // Getters & Setters
-
-    public List<TicketShortDto> getTickets() {
-        return tickets;
-    }
-
-    public void setTickets(List<TicketShortDto> tickets) {
-        this.tickets = tickets;
-    }
 
     public Long getId() {
         return id;
@@ -118,6 +110,22 @@ public class EvenementRequestDto {
         this.organisateurId = organisateurId;
     }
 
+    public double getPrix() { // Getter pour prix
+        return prix;
+    }
+
+    public void setPrix(double prix) { // Setter pour prix
+        this.prix = prix;
+    }
+
+    public List<TicketShortDto> getTickets() {
+        return tickets;
+    }
+
+    public void setTickets(List<TicketShortDto> tickets) {
+        this.tickets = tickets;
+    }
+
     public static TicketShortDto toTicketShortDto(Ticket ticket) {
         TicketShortDto dto = new TicketShortDto();
         dto.setId(ticket.getId());
@@ -127,4 +135,5 @@ public class EvenementRequestDto {
         return dto;
     }
 }
+
 

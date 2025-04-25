@@ -9,7 +9,6 @@ import fr.istic.taa.jaxrs.dto.response.EvenementResponseDto;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
-
 public class EvenementMapper {
 
     public static Evenement toEntity(EvenementRequestDto dto, Organisateur organisateur) {
@@ -23,6 +22,7 @@ public class EvenementMapper {
         e.setStock(dto.getStock());
         e.setGenre(dto.getGenre());
         e.setArtiste(dto.getArtiste());
+        e.setPrix(dto.getPrix());
         e.setOrganisateur(organisateur);
         return e;
     }
@@ -39,6 +39,7 @@ public class EvenementMapper {
         dto.setStock(e.getStock());
         dto.setGenre(e.getGenre());
         dto.setArtiste(e.getArtiste());
+        dto.setPrix(e.getPrix());
         dto.setOrganisateurId(e.getOrganisateur() != null ? e.getOrganisateur().getId() : null);
 
         if (e.getTickets() != null) {
@@ -63,4 +64,3 @@ public class EvenementMapper {
     }
 
 }
-
