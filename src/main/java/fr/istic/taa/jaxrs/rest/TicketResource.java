@@ -176,7 +176,7 @@ public class TicketResource {
     }
 
     @GET
-    @Path("/utilisateurs/{id}/tickets")
+    @Path("/utilisateurs/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getTicketsParUtilisateur(@PathParam("id") Long utilisateurId) {
         try {
