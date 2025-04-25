@@ -46,7 +46,7 @@ public class ConnexionResource {
             }
         }
 
-// 2. Vérifier si c'est un utilisateur
+       // 2. Vérifier si c'est un utilisateur
         List<Utilisateur> utilisateurs = utilisateurDao.findBy(filters);
         if (!utilisateurs.isEmpty()) {
             Utilisateur user = utilisateurs.get(0);

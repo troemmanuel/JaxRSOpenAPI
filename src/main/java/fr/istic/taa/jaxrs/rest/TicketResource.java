@@ -129,7 +129,7 @@ public class TicketResource {
     }
 
     @DELETE
-    @Path("/{id}")
+    @Path("/annuler/{id}")
     public Response annulerTicket(@PathParam("id") Long ticketId) {
         try {
             if (ticketId == null) {
