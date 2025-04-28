@@ -4,10 +4,13 @@ import fr.istic.taa.jaxrs.domain.Utilisateur;
 import fr.istic.taa.jaxrs.domain.Utilisateur;
 import fr.istic.taa.jaxrs.domain.Utilisateur;
 import fr.istic.taa.jaxrs.dto.mapper.ProfilMapper;
+import fr.istic.taa.jaxrs.dto.mapper.TicketMapper;
 import fr.istic.taa.jaxrs.dto.request.ProfilRequestDto;
 import fr.istic.taa.jaxrs.dto.response.ProfilResponseDto;
+import fr.istic.taa.jaxrs.dto.response.TicketResponseDto;
 import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
 import java.util.HashMap;
@@ -81,4 +84,24 @@ public class UtilisateurResource {
         utilisateurDao.delete(u);
         return Response.ok("Supprimé").build();
     }
+
+    @GET
+    @Path("/{id}/tickets")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getTicketsParUtilisateur(@PathParam("id") Long utilisateurId) {
+        Utilisateur utilisateur = utilisateurDao.findOne(utilisateurId);
+
+        if (utilisateur == null) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity("Utilisateur non trouvé")
+                    .build();
+        }
+
+        List<TicketResponseDto> ticketsDto = utilisateur.getTickets().stream()
+                .map(TicketMapper::toDto)
+                .collect(Collectors.toList());
+
+        return Response.ok(ticketsDto).build();
+    }
+
 }

@@ -175,35 +175,6 @@ public class TicketResource {
         }
     }
 
-    @GET
-    @Path("/utilisateurs/{id}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response getTicketsParUtilisateur(@PathParam("id") Long utilisateurId) {
-        try {
-            if (utilisateurId == null) {
-                return Response.status(Response.Status.BAD_REQUEST)
-                        .entity("L'ID de l'utilisateur est requis").build();
-            }
-
-            Map<String, Object> filters = new HashMap<>();
-            filters.put("utilisateur.id", utilisateurId); // clé conforme au nom du champ dans l'entité Ticket
-
-            List<Ticket> tickets = ticketDao.findBy(filters);
-
-            if (tickets == null || tickets.isEmpty()) {
-                return Response.status(Response.Status.NOT_FOUND)
-                        .entity("Aucun ticket trouvé pour cet utilisateur").build();
-            }
-
-            return Response.ok(tickets).build();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return Response.serverError()
-                    .entity("Erreur serveur : " + e.getMessage()).build();
-        }
-    }
-
 
 
 
