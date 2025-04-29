@@ -59,13 +59,24 @@ public class TicketResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response acheterTicket(TicketRequestDto dto) {
+        System.out.println("achat d'un ticket tickets par l'utilisateur " + dto.getUtilisateurId());
         try {
             System.out.println("Reçu DTO : " + dto);
 
+            // Vérifier si le DTO est null
             if (dto == null) {
                 return Response.status(Response.Status.BAD_REQUEST)
                         .entity("Le corps de la requête est vide").build();
             }
+
+            // Vérifier si l'ID de l'utilisateur est null
+            if (dto.getUtilisateurId() == null) {
+                System.out.println("Erreur : utilisateurId est null");
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity("L'ID de l'utilisateur est requis").build();
+            }
+
+            Utilisateur utilisateur = utilisateurDao.findOne(dto.getUtilisateurId());
 
             // Vérifie l'ID de l'événement
             if (dto.getEvenementId() == null) {
@@ -91,7 +102,7 @@ public class TicketResource {
             }
 
             // 1. Créer le ticket (sans QR code)
-            Ticket ticket = TicketMapper.toEntity(dto, null, evenement);
+            Ticket ticket = TicketMapper.toEntity(dto, utilisateur, evenement);
             System.out.println("Ticket créé : " + ticket);
 
             // 2. Sauvegarder le ticket pour obtenir l'ID
@@ -127,6 +138,7 @@ public class TicketResource {
                     .entity("Erreur serveur : " + e.getMessage()).build();
         }
     }
+
 
     @DELETE
     @Path("/annuler/{id}")
@@ -198,6 +210,25 @@ public class TicketResource {
         // Sauvegarder l'image du code QR sur le serveur
         File file = new File(filePath);
         ImageIO.write(image, "PNG", file);
+    }
+
+    @GET
+    @Path("/qrcodes/{ticketId}")
+    @Produces("image/png")
+    public Response getQRCode(@PathParam("ticketId") Long ticketId) {
+        Ticket ticket = ticketDao.findOne(ticketId);
+        if (ticket == null || ticket.getCodeQR() == null) {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
+
+        File qrFile = new File(ticket.getCodeQR());
+        if (!qrFile.exists()) {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
+
+        return Response.ok(qrFile)
+                .header("Content-Disposition", "inline; filename=\"" + qrFile.getName() + "\"")
+                .build();
     }
 
 }
