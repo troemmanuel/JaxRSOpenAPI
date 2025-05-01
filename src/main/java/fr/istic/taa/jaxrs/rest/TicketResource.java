@@ -7,6 +7,7 @@ import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
 import fr.istic.taa.jaxrs.dao.EvenementDao;
 import fr.istic.taa.jaxrs.dao.TicketDao;
+import fr.istic.taa.jaxrs.dao.TicketEtat;
 import fr.istic.taa.jaxrs.dao.UtilisateurDao;
 import fr.istic.taa.jaxrs.domain.Evenement;
 import fr.istic.taa.jaxrs.domain.Ticket;
@@ -145,7 +146,10 @@ public class TicketResource {
             Ticket ticket = TicketMapper.toEntity(dto, utilisateur, evenement);
             System.out.println("Ticket créé : " + ticket);
 
-            // 2. Sauvegarder le ticket pour obtenir l'ID
+            // 2. Mettre l'état du ticket à "PAYE"
+            ticket.setEtat(TicketEtat.PAYE.toString());
+
+            // 3. Sauvegarder le ticket pour obtenir l'ID
             ticketDao.save(ticket); // Cela génère l'ID
 
             // Générer le code QR pour le ticket
@@ -167,7 +171,7 @@ public class TicketResource {
             evenement.setStock(evenement.getStock() - 1);
             evenementDao.save(evenement); // Sauvegarder le nouvel état de l'événement
 
-            // Sauvegarder le ticket dans la base de données avec le QR Code
+            // Sauvegarder le ticket dans la base de données avec le QR Code et l'état PAYE
             ticketDao.save(ticket);
 
             return Response.ok("Ticket acheté avec succès avec QR Code").build();
@@ -178,6 +182,7 @@ public class TicketResource {
                     .entity("Erreur serveur : " + e.getMessage()).build();
         }
     }
+
 
 
     @DELETE
@@ -227,14 +232,17 @@ public class TicketResource {
                         .entity("Annulation impossible : moins de 24h avant l'événement").build();
             }
 
-            // Supprime le ticket
-            ticketDao.delete(ticket);
+            // 1. Mettre l'état du ticket à "REMBOURSE"
+            ticket.setEtat(TicketEtat.REMBOURSE.toString());
 
-            // Ré-augmente le stock
+            // 2. Sauvegarder le ticket avec l'état mis à jour
+            ticketDao.save(ticket);  // Cela met à jour l'état du ticket dans la base de données
+
+            // 3. Ré-augmente le stock de l'événement
             evenement.setStock(evenement.getStock() + 1);
             evenementDao.save(evenement);
 
-            return Response.ok("Ticket annulé avec succès").build();
+            return Response.ok("Ticket annulé et remboursé avec succès").build();
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -242,6 +250,7 @@ public class TicketResource {
                     .entity("Erreur lors de l'annulation : " + e.getMessage()).build();
         }
     }
+
 
 
 
