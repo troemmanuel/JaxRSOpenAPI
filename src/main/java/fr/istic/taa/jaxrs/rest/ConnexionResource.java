@@ -7,6 +7,10 @@ import fr.istic.taa.jaxrs.domain.Administrateur;
 import fr.istic.taa.jaxrs.domain.Organisateur;
 import fr.istic.taa.jaxrs.domain.Utilisateur;
 import fr.istic.taa.jaxrs.dto.request.ConnexionDto;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
@@ -21,12 +25,46 @@ import java.util.Map;
 @Produces("application/json")
 @Consumes("application/json")
 public class ConnexionResource {
+
     private final AdministrateurDao administrateurDao = new AdministrateurDao();
     private final UtilisateurDao utilisateurDao = new UtilisateurDao();
     private final OrganisateurDao organisateurDao = new OrganisateurDao();
 
     @POST
-    public Response connexion(ConnexionDto credentials) {
+    @Operation(
+            summary = "Authentification d'un utilisateur",
+            description = "Permet à un utilisateur (administrateur, utilisateur ou organisateur) de se connecter.",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Connexion réussie",
+                            content = @io.swagger.v3.oas.annotations.media.Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = Map.class)
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "401",
+                            description = "Identifiants incorrects",
+                            content = @io.swagger.v3.oas.annotations.media.Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = String.class)
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "500",
+                            description = "Erreur interne du serveur",
+                            content = @io.swagger.v3.oas.annotations.media.Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = String.class)
+                            )
+                    )
+            }
+    )
+    public Response connexion(
+            @Parameter(description = "Informations de connexion", required = true)
+            ConnexionDto credentials) {
+
         String email = credentials.getEmail();
         String motDePasse = credentials.getMotDePasse();
         Map<String, Object> filters = new HashMap<>();
@@ -46,7 +84,7 @@ public class ConnexionResource {
             }
         }
 
-       // 2. Vérifier si c'est un utilisateur
+        // 2. Vérifier si c'est un utilisateur
         List<Utilisateur> utilisateurs = utilisateurDao.findBy(filters);
         if (!utilisateurs.isEmpty()) {
             Utilisateur user = utilisateurs.get(0);
@@ -77,6 +115,5 @@ public class ConnexionResource {
         // 4. Identifiants incorrects
         return Response.status(Response.Status.UNAUTHORIZED)
                 .entity("Email ou mot de passe invalide.").build();
-
     }
 }

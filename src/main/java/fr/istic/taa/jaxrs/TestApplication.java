@@ -21,6 +21,7 @@ import java.util.Set;
 
 import fr.istic.taa.jaxrs.domain.Organisateur;
 import fr.istic.taa.jaxrs.rest.*;
+import io.swagger.v3.jaxrs2.integration.resources.AcceptHeaderOpenApiResource;
 import io.swagger.v3.jaxrs2.integration.resources.OpenApiResource;
 import jakarta.ws.rs.ApplicationPath;
 import jakarta.ws.rs.core.Application;
@@ -42,8 +43,10 @@ public class TestApplication extends Application {
         clazzes.add(EvenementResource.class);
         clazzes.add(TicketResource.class);
         clazzes.add(ConnexionResource.class);
-//        clazzes.add(AcceptHeaderOpenApiResource.class);
-         
+        clazzes.add(AcceptHeaderOpenApiResource.class);
+        clazzes.add(SwaggerResource.class);
+        clazzes.add(GlobalExceptionHandler.class);
+
 
         return clazzes;
     }

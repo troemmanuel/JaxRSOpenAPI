@@ -1,8 +1,17 @@
 package fr.istic.taa.jaxrs.dto.request;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Données pour créer ou mettre à jour un profil utilisateur")
 public class ProfilRequestDto {
+
+    @Schema(description = "Nom de l'utilisateur", example = "Jean Dupont", required = true)
     private String nom;
+
+    @Schema(description = "Adresse email", example = "jean.dupont@example.com", required = true)
     private String email;
+
+    @Schema(description = "Mot de passe", example = "motdepasse123", required = true)
     private String motDePasse;
 
     // Getters et Setters
@@ -30,4 +39,3 @@ public class ProfilRequestDto {
         this.motDePasse = motDePasse;
     }
 }
-

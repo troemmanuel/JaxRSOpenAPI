@@ -2,25 +2,53 @@ package fr.istic.taa.jaxrs.dto.request;
 
 import fr.istic.taa.jaxrs.domain.Ticket;
 import fr.istic.taa.jaxrs.dto.TicketShortDto;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.util.Date;
 import java.util.List;
+
 public class EvenementRequestDto {
+
+    @Schema(description = "Identifiant de l'événement", example = "1")
     private Long id;
+
+    @Schema(description = "Nom de l'événement", example = "Concert de Rock", required = true)
     private String nom;
+
+    @Schema(description = "Date de l'événement", example = "2025-06-15T20:00:00", required = true)
     private Date date;
+
+    @Schema(description = "Lieu de l'événement", example = "Stade de France", required = true)
     private String lieu;
+
+    @Schema(description = "Capacité maximale de l'événement", example = "10000", required = true)
     private int capacite;
+
+    @Schema(description = "Description détaillée de l'événement", example = "Un concert exceptionnel avec des artistes internationaux", required = true)
     private String description;
+
+    @Schema(description = "État actuel de l'événement (ex: ouvert, fermé, annulé)", example = "ouvert")
     private String etat;
+
+    @Schema(description = "Stock actuel de billets disponibles", example = "200", required = true)
     private int stock;
+
+    @Schema(description = "Genre de l'événement (ex: concert, théâtre, conférence)", example = "concert")
     private String genre;
+
+    @Schema(description = "Artiste principal de l'événement", example = "The Rolling Stones")
     private String artiste;
+
+    @Schema(description = "Identifiant de l'organisateur de l'événement", example = "3", required = true)
     private Long organisateurId;
-    private double prix; // <-- Ajout du champ prix
+
+    @Schema(description = "Prix du billet pour l'événement", example = "50.0", required = true)
+    private double prix;
+
+    @Schema(description = "Liste des tickets associés à cet événement")
     private List<TicketShortDto> tickets;
 
-    // Getters & Setters
+    // Getters et Setters
 
     public Long getId() {
         return id;
@@ -110,11 +138,11 @@ public class EvenementRequestDto {
         this.organisateurId = organisateurId;
     }
 
-    public double getPrix() { // Getter pour prix
+    public double getPrix() {
         return prix;
     }
 
-    public void setPrix(double prix) { // Setter pour prix
+    public void setPrix(double prix) {
         this.prix = prix;
     }
 
@@ -135,5 +163,3 @@ public class EvenementRequestDto {
         return dto;
     }
 }
-
-

@@ -7,7 +7,10 @@ import fr.istic.taa.jaxrs.domain.Organisateur;
 import fr.istic.taa.jaxrs.dto.mapper.EvenementMapper;
 import fr.istic.taa.jaxrs.dto.request.EvenementRequestDto;
 import fr.istic.taa.jaxrs.dto.response.EvenementResponseDto;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Response;
 import java.util.List;
@@ -23,6 +26,18 @@ public class EvenementResource {
 
     @GET
     @Path("/{id}")
+    @Operation(
+            summary = "Récupérer un événement par ID",
+            description = "Retourne les détails d'un événement spécifique.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Événement trouvé",
+                            content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json",
+                                    schema = @Schema(implementation = EvenementResponseDto.class))),
+                    @ApiResponse(responseCode = "404", description = "Événement non trouvé",
+                            content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json",
+                                    schema = @Schema(implementation = String.class)))
+            }
+    )
     public Response getEvenementById(@PathParam("id") Long id) {
         Evenement evenement = evenementDao.findOne(id);
         if (evenement == null) {
@@ -34,6 +49,16 @@ public class EvenementResource {
     }
 
     @GET
+    @Operation(
+            summary = "Récupérer tous les événements",
+            description = "Retourne une liste de tous les événements disponibles.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Liste des événements",
+                            content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json",
+                                    schema = @Schema(implementation = EvenementResponseDto.class,
+                                            type = "array")))
+            }
+    )
     public Response getAllEvenements() {
         List<Evenement> evenements = evenementDao.findAll();
         List<EvenementResponseDto> dtos = evenements.stream()
@@ -43,7 +68,21 @@ public class EvenementResource {
     }
 
     @POST
-    public Response addEvenement(@Parameter(description = "Evenement object", required = true) EvenementRequestDto dto) {
+    @Operation(
+            summary = "Ajouter un nouvel événement",
+            description = "Crée un nouvel événement dans le système.",
+            responses = {
+                    @ApiResponse(responseCode = "201", description = "Événement ajouté avec succès",
+                            content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json",
+                                    schema = @Schema(implementation = String.class))),
+                    @ApiResponse(responseCode = "400", description = "Organisateur introuvable",
+                            content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json",
+                                    schema = @Schema(implementation = String.class)))
+            }
+    )
+    public Response addEvenement(
+            @Parameter(description = "Données de l'événement à ajouter", required = true) EvenementRequestDto dto) {
+
         Organisateur organisateur = organisateurDao.findOne(dto.getOrganisateurId());
 
         if (organisateur == null) {
