@@ -7,6 +7,7 @@ import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
 import fr.istic.taa.jaxrs.dao.EvenementDao;
 import fr.istic.taa.jaxrs.dao.TicketDao;
+import fr.istic.taa.jaxrs.dao.TicketEtat;
 import fr.istic.taa.jaxrs.dao.UtilisateurDao;
 import fr.istic.taa.jaxrs.domain.Evenement;
 import fr.istic.taa.jaxrs.domain.Ticket;
@@ -14,7 +15,10 @@ import fr.istic.taa.jaxrs.domain.Utilisateur;
 import fr.istic.taa.jaxrs.dto.mapper.TicketMapper;
 import fr.istic.taa.jaxrs.dto.request.TicketRequestDto;
 import fr.istic.taa.jaxrs.dto.response.TicketResponseDto;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -36,6 +40,18 @@ public class TicketResource {
 
     @GET
     @Path("/{id}")
+    @Operation(
+            summary = "Obtenir un ticket par ID",
+            description = "Retourne les détails d'un ticket spécifique.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Ticket trouvé",
+                            content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json",
+                                    schema = @Schema(implementation = TicketResponseDto.class))),
+                    @ApiResponse(responseCode = "404", description = "Ticket non trouvé",
+                            content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json",
+                                    schema = @Schema(implementation = String.class)))
+            }
+    )
     public Response getTicketById(@PathParam("id") Long id) {
         Ticket ticket = ticketDao.findOne(id);
         if (ticket == null) {
@@ -47,6 +63,15 @@ public class TicketResource {
     }
 
     @GET
+    @Operation(
+            summary = "Obtenir tous les tickets",
+            description = "Retourne une liste de tous les tickets disponibles.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Liste des tickets",
+                            content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json",
+                                    schema = @Schema(implementation = TicketResponseDto.class, type = "array")))
+            }
+    )
     public Response getAllTickets() {
         List<Ticket> tickets = ticketDao.findAll();
         List<TicketResponseDto> dtos = tickets.stream()
@@ -58,14 +83,41 @@ public class TicketResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
+    @Operation(
+            summary = "Acheter un ticket",
+            description = "Permet à un utilisateur d'acheter un ticket pour un événement.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Ticket acheté avec succès"),
+                    @ApiResponse(responseCode = "400", description = "Requête invalide ou données manquantes",
+                            content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json",
+                                    schema = @Schema(implementation = String.class))),
+                    @ApiResponse(responseCode = "404", description = "Événement ou utilisateur non trouvé",
+                            content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json",
+                                    schema = @Schema(implementation = String.class))),
+                    @ApiResponse(responseCode = "409", description = "Stock insuffisant pour l'événement",
+                            content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json",
+                                    schema = @Schema(implementation = String.class)))
+            }
+    )
     public Response acheterTicket(TicketRequestDto dto) {
+        System.out.println("achat d'un ticket tickets par l'utilisateur " + dto.getUtilisateurId());
         try {
             System.out.println("Reçu DTO : " + dto);
 
+            // Vérifier si le DTO est null
             if (dto == null) {
                 return Response.status(Response.Status.BAD_REQUEST)
                         .entity("Le corps de la requête est vide").build();
             }
+
+            // Vérifier si l'ID de l'utilisateur est null
+            if (dto.getUtilisateurId() == null) {
+                System.out.println("Erreur : utilisateurId est null");
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity("L'ID de l'utilisateur est requis").build();
+            }
+
+            Utilisateur utilisateur = utilisateurDao.findOne(dto.getUtilisateurId());
 
             // Vérifie l'ID de l'événement
             if (dto.getEvenementId() == null) {
@@ -91,10 +143,13 @@ public class TicketResource {
             }
 
             // 1. Créer le ticket (sans QR code)
-            Ticket ticket = TicketMapper.toEntity(dto, null, evenement);
+            Ticket ticket = TicketMapper.toEntity(dto, utilisateur, evenement);
             System.out.println("Ticket créé : " + ticket);
 
-            // 2. Sauvegarder le ticket pour obtenir l'ID
+            // 2. Mettre l'état du ticket à "PAYE"
+            ticket.setEtat(TicketEtat.PAYE.toString());
+
+            // 3. Sauvegarder le ticket pour obtenir l'ID
             ticketDao.save(ticket); // Cela génère l'ID
 
             // Générer le code QR pour le ticket
@@ -116,7 +171,7 @@ public class TicketResource {
             evenement.setStock(evenement.getStock() - 1);
             evenementDao.save(evenement); // Sauvegarder le nouvel état de l'événement
 
-            // Sauvegarder le ticket dans la base de données avec le QR Code
+            // Sauvegarder le ticket dans la base de données avec le QR Code et l'état PAYE
             ticketDao.save(ticket);
 
             return Response.ok("Ticket acheté avec succès avec QR Code").build();
@@ -128,8 +183,26 @@ public class TicketResource {
         }
     }
 
+
+
     @DELETE
     @Path("/annuler/{id}")
+    @Operation(
+            summary = "Annuler un ticket",
+            description = "Permet à un utilisateur d'annuler un ticket acheté si l'événement a lieu dans plus de 24h.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Ticket annulé avec succès"),
+                    @ApiResponse(responseCode = "400", description = "ID du ticket manquant ou invalide",
+                            content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json",
+                                    schema = @Schema(implementation = String.class))),
+                    @ApiResponse(responseCode = "404", description = "Ticket non trouvé",
+                            content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json",
+                                    schema = @Schema(implementation = String.class))),
+                    @ApiResponse(responseCode = "403", description = "Annulation impossible si moins de 24h avant l'événement",
+                            content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json",
+                                    schema = @Schema(implementation = String.class)))
+            }
+    )
     public Response annulerTicket(@PathParam("id") Long ticketId) {
         try {
             if (ticketId == null) {
@@ -159,14 +232,17 @@ public class TicketResource {
                         .entity("Annulation impossible : moins de 24h avant l'événement").build();
             }
 
-            // Supprime le ticket
-            ticketDao.delete(ticket);
+            // 1. Mettre l'état du ticket à "REMBOURSE"
+            ticket.setEtat(TicketEtat.REMBOURSE.toString());
 
-            // Ré-augmente le stock
+            // 2. Sauvegarder le ticket avec l'état mis à jour
+            ticketDao.save(ticket);  // Cela met à jour l'état du ticket dans la base de données
+
+            // 3. Ré-augmente le stock de l'événement
             evenement.setStock(evenement.getStock() + 1);
             evenementDao.save(evenement);
 
-            return Response.ok("Ticket annulé avec succès").build();
+            return Response.ok("Ticket annulé et remboursé avec succès").build();
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -175,34 +251,6 @@ public class TicketResource {
         }
     }
 
-    @GET
-    @Path("/utilisateurs/{id}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response getTicketsParUtilisateur(@PathParam("id") Long utilisateurId) {
-        try {
-            if (utilisateurId == null) {
-                return Response.status(Response.Status.BAD_REQUEST)
-                        .entity("L'ID de l'utilisateur est requis").build();
-            }
-
-            Map<String, Object> filters = new HashMap<>();
-            filters.put("utilisateur.id", utilisateurId); // clé conforme au nom du champ dans l'entité Ticket
-
-            List<Ticket> tickets = ticketDao.findBy(filters);
-
-            if (tickets == null || tickets.isEmpty()) {
-                return Response.status(Response.Status.NOT_FOUND)
-                        .entity("Aucun ticket trouvé pour cet utilisateur").build();
-            }
-
-            return Response.ok(tickets).build();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return Response.serverError()
-                    .entity("Erreur serveur : " + e.getMessage()).build();
-        }
-    }
 
 
 
@@ -227,6 +275,36 @@ public class TicketResource {
         // Sauvegarder l'image du code QR sur le serveur
         File file = new File(filePath);
         ImageIO.write(image, "PNG", file);
+    }
+
+    @GET
+    @Path("/qrcodes/{ticketId}")
+    @Produces("image/png")
+    @Operation(
+            summary = "Obtenir le code QR d'un ticket",
+            description = "Retourne le code QR associé à un ticket.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Code QR retourné",
+                            content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "image/png")),
+                    @ApiResponse(responseCode = "404", description = "Ticket ou code QR non trouvé",
+                            content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json",
+                                    schema = @Schema(implementation = String.class)))
+            }
+    )
+    public Response getQRCode(@PathParam("ticketId") Long ticketId) {
+        Ticket ticket = ticketDao.findOne(ticketId);
+        if (ticket == null || ticket.getCodeQR() == null) {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
+
+        File qrFile = new File(ticket.getCodeQR());
+        if (!qrFile.exists()) {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
+
+        return Response.ok(qrFile)
+                .header("Content-Disposition", "inline; filename=\"" + qrFile.getName() + "\"")
+                .build();
     }
 
 }

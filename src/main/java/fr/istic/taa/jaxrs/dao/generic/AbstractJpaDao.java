@@ -42,7 +42,7 @@ public abstract class AbstractJpaDao<K, T extends Serializable> implements IGene
 			queryBuilder.append("e.").append(property).append(" = :").append(property);
 			index++;
 		}
-
+		System.out.println(queryBuilder.toString());
 		TypedQuery<T> query = entityManager.createQuery(queryBuilder.toString(), clazz);
 		for (Map.Entry<String, Object> entry : properties.entrySet()) {
 			query.setParameter(entry.getKey(), entry.getValue());

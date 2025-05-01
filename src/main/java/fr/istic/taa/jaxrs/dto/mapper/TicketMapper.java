@@ -19,6 +19,7 @@ public class TicketMapper {
     }
 
     public static TicketResponseDto toDto(Ticket ticket) {
+        System.out.println(ticket);
         TicketResponseDto dto = new TicketResponseDto();
         dto.setId(ticket.getId());
         dto.setCodeQR(ticket.getCodeQR());
