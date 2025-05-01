@@ -2,6 +2,8 @@ package fr.istic.taa.jaxrs.rest;
 
 import fr.istic.taa.jaxrs.dao.OrganisateurDao;
 import fr.istic.taa.jaxrs.domain.Organisateur;
+import fr.istic.taa.jaxrs.domain.Organisateur;
+import fr.istic.taa.jaxrs.dto.mapper.EvenementMapper;
 import fr.istic.taa.jaxrs.dto.mapper.ProfilMapper;
 import fr.istic.taa.jaxrs.dto.request.ProfilRequestDto;
 import fr.istic.taa.jaxrs.dto.response.EvenementResponseDto;
@@ -161,6 +163,9 @@ public class OrganisateurResource {
         if (organisateur == null) {
             return Response.status(Response.Status.NOT_FOUND).entity("Organisateur non trouvé").build();
         }
-        return Response.ok(organisateur.getEvenements()).build();
+        List<EvenementResponseDto> evenementsDto = organisateur.getEvenements().stream()
+                .map(EvenementMapper::toDto)
+                .collect(Collectors.toList());
+        return Response.ok(evenementsDto).build();
     }
 }

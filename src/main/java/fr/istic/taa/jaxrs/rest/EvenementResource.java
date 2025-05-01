@@ -92,8 +92,42 @@ public class EvenementResource {
         Evenement evenement = EvenementMapper.toEntity(dto, organisateur);
         evenementDao.save(evenement);
 
-        return Response.status(Response.Status.CREATED)
-                .entity("Événement ajouté avec succès")
-                .build();
+        return Response.ok().build();
     }
+    @DELETE
+    @Path("/{id}")
+    public Response deleteEvenement(@PathParam("id") Long id) {
+        Evenement evenement = evenementDao.findOne(id);
+        if (evenement == null) {
+            return Response.status(Response.Status.NOT_FOUND).entity("Événement non trouvé").build();
+        }
+
+        evenementDao.delete(evenement);
+        return Response.noContent().build(); // ou .ok().build() si tu veux renvoyer 200
+    }
+    @PUT
+    @Path("/{id}")
+    public Response updateEvenement(@PathParam("id") Long id, EvenementRequestDto dto) {
+        Evenement existing = evenementDao.findOne(id);
+        if (existing == null) {
+            return Response.status(Response.Status.NOT_FOUND).entity("Événement introuvable").build();
+        }
+
+        Organisateur organisateur = organisateurDao.findOne(dto.getOrganisateurId());
+        if (organisateur == null) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("Organisateur introuvable").build();
+        }
+
+        // Mets à jour les champs
+        existing.setNom(dto.getNom());
+        existing.setLieu(dto.getLieu());
+        existing.setDate(dto.getDate());
+        existing.setOrganisateur(organisateur);
+        // Ajoute ici d'autres champs si nécessaire
+
+        evenementDao.update(existing);
+
+        return Response.ok(EvenementMapper.toDto(existing)).build();
+    }
+
 }
